@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PUMP RADAR</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23030008'/%3E%3Ccircle cx='32' cy='32' r='26' fill='none' stroke='%2300ff88' stroke-width='1.5' opacity='0.5'/%3E%3Ccircle cx='32' cy='32' r='17' fill='none' stroke='%2300ff88' stroke-width='1' opacity='0.3'/%3E%3Cline x1='6' y1='32' x2='58' y2='32' stroke='%2300ff88' stroke-width='0.8' opacity='0.2'/%3E%3Cline x1='32' y1='6' x2='32' y2='58' stroke='%2300ff88' stroke-width='0.8' opacity='0.2'/%3E%3Cline x1='32' y1='32' x2='50' y2='16' stroke='%2300ff88' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='32' r='3' fill='%2300ff88'/%3E%3Ccircle cx='50' cy='16' r='3.5' fill='%2300ff88'/%3E%3Ccircle cx='50' cy='16' r='7' fill='none' stroke='%2300ff88' stroke-width='1.5' opacity='0.6'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#030008;--card:#0a0018;--card2:#120025;
+  --green:#00ff88;--orange:#ff8c00;--red:#ff3b3b;--cyan:#00f5ff;--yellow:#ffe66d;
+  --text:#e0ffe8;--muted:#5a6a7a;--border:rgba(0,255,136,0.15);
+}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;min-height:100vh;}
+
+/* HEADER */
+header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(3,0,8,0.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:0.85rem 2rem;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{display:flex;align-items:center;gap:0.75rem;}
+.logo svg{display:block;}
+.logo-text{font-family:'Bebas Neue',cursive;font-size:1.6rem;letter-spacing:4px;color:var(--green);text-shadow:0 0 20px rgba(0,255,136,0.4);}
+.header-right{display:flex;align-items:center;gap:1rem;}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.live-txt{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:2px;color:var(--muted);}
+.check-btn{
+  font-family:'Bebas Neue',cursive;font-size:0.9rem;letter-spacing:3px;
+  padding:0.45rem 1.25rem;
+  background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.4);
+  color:var(--green);cursor:pointer;transition:all 0.2s;
+}
+.check-btn:hover{background:rgba(0,255,136,0.15);border-color:var(--green);}
+.check-btn:disabled{opacity:0.35;cursor:not-allowed;}
+
+/* MAIN */
+main{max-width:1100px;margin:0 auto;padding:1.5rem;}
+
+/* STATS */
+.stats{display:flex;gap:0.75rem;margin-bottom:1.25rem;flex-wrap:wrap;}
+.stat{background:var(--card);border:1px solid var(--border);padding:0.45rem 1rem;display:flex;align-items:center;gap:0.5rem;font-family:'JetBrains Mono',monospace;font-size:0.75rem;}
+.stat-l{color:var(--muted);}
+.stat-v{color:var(--green);font-weight:700;}
+
+/* FILTERS */
+.filters{display:flex;gap:0.5rem;margin-bottom:1.25rem;flex-wrap:wrap;}
+.fb{font-family:'Bebas Neue',cursive;font-size:0.85rem;letter-spacing:3px;padding:0.35rem 1rem;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all 0.2s;}
+.fb.active,.fb:hover{border-color:var(--green);color:var(--green);background:rgba(0,255,136,0.05);}
+
+/* SCANNING */
+.scanning{display:none;align-items:center;gap:0.75rem;background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.2);padding:0.75rem 1.25rem;margin-bottom:1.25rem;font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--green);}
+.scanning.show{display:flex;}
+.spin{width:14px;height:14px;border:2px solid rgba(0,255,136,0.15);border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.err{display:none;background:rgba(255,59,59,0.05);border:1px solid rgba(255,59,59,0.2);padding:0.75rem 1.25rem;margin-bottom:1.25rem;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--red);}
+.err.show{display:block;}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.grid{grid-template-columns:1fr;} header{padding:0.75rem 1rem;} main{padding:1rem;}}
+
+/* CARD */
+.card{
+  background:var(--card);border:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+  text-decoration:none;position:relative;
+  transition:all 0.25s;border-radius:4px;
+  animation:slideIn 0.4s ease forwards;
+}
+.card:hover{border-color:rgba(0,255,136,0.4);background:var(--card2);transform:translateY(-3px);}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+
+/* Rating stripe */
+.card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+.card.r5::before{background:var(--green);box-shadow:0 0 8px var(--green);}
+.card.r4::before{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+.card.r3::before{background:var(--orange);}
+.card.r2::before{background:var(--red);}
+.card.r1::before{background:var(--muted);}
+
+/* Image */
+.card-img{width:100%;height:170px;overflow:hidden;flex-shrink:0;background:rgba(0,255,136,0.03);}
+.card-img img{width:100%;height:100%;object-fit:cover;transition:transform 0.3s;display:block;}
+.card:hover .card-img img{transform:scale(1.04);}
+.no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;opacity:0.3;}
+
+/* Content */
+.card-body{padding:1rem;display:flex;flex-direction:column;gap:0.5rem;flex:1;}
+.card-meta{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;}
+.badge{font-family:'Bebas Neue',cursive;font-size:0.78rem;letter-spacing:2px;padding:0.15rem 0.55rem;}
+.r5 .badge{background:rgba(0,255,136,0.12);color:var(--green);border:1px solid rgba(0,255,136,0.25);}
+.r4 .badge{background:rgba(0,245,255,0.08);color:var(--cyan);border:1px solid rgba(0,245,255,0.2);}
+.r3 .badge{background:rgba(255,140,0,0.08);color:var(--orange);border:1px solid rgba(255,140,0,0.2);}
+.r2 .badge{background:rgba(255,59,59,0.08);color:var(--red);border:1px solid rgba(255,59,59,0.2);}
+.r1 .badge{background:rgba(90,106,122,0.08);color:var(--muted);border:1px solid rgba(90,106,122,0.2);}
+.src{font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.win{font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:2px;text-transform:uppercase;padding:0.1rem 0.4rem;border:1px solid;}
+.win-now{color:var(--red);border-color:rgba(255,59,59,0.35);background:rgba(255,59,59,0.06);animation:pulse 1s infinite;}
+.win-good{color:var(--yellow);border-color:rgba(255,230,109,0.3);}
+.win-ok{color:var(--muted);border-color:rgba(90,106,122,0.25);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.card-title{font-size:0.92rem;font-weight:700;color:var(--text);line-height:1.4;}
+.card-desc{font-size:0.8rem;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.card-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:auto;flex-wrap:wrap;gap:0.4rem;}
+.coin{display:flex;align-items:center;gap:0.35rem;background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.18);padding:0.2rem 0.6rem;}
+.coin-l{font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+.coin-v{font-family:'Bebas Neue',cursive;font-size:0.9rem;letter-spacing:2px;color:var(--green);}
+.time{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);}
+.read{font-family:'Bebas Neue',cursive;font-size:0.8rem;letter-spacing:2px;color:var(--cyan);}
+.reason{font-size:0.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace;border-top:1px solid rgba(0,255,136,0.08);padding-top:0.5rem;margin-top:0.25rem;line-height:1.5;}
+
+/* EMPTY */
+.empty{text-align:center;padding:4rem 2rem;color:var(--muted);grid-column:1/-1;}
+.empty-ico{font-size:3rem;margin-bottom:1rem;opacity:0.4;}
+.empty-title{font-family:'Bebas Neue',cursive;font-size:1.5rem;letter-spacing:3px;margin-bottom:0.4rem;}
+.empty-sub{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:2px;}
+
+/* BOTTOM BTNS */
+.btns{display:flex;flex-direction:column;gap:0.5rem;margin-top:1.5rem;}
+.btn{width:100%;font-family:'Bebas Neue',cursive;font-size:1rem;letter-spacing:4px;padding:0.9rem;border:1px solid;cursor:pointer;background:transparent;transition:all 0.2s;}
+.btn-scan{border-color:rgba(0,255,136,0.3);color:var(--green);}
+.btn-scan:hover{background:rgba(0,255,136,0.08);border-color:var(--green);}
+.btn-scan:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-clear{border-color:rgba(255,59,59,0.2);color:var(--red);}
+.btn-clear:hover{background:rgba(255,59,59,0.06);border-color:var(--red);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="36" height="36" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="10" fill="#030008"/>
+      <circle cx="32" cy="32" r="26" fill="none" stroke="#00ff88" stroke-width="1.5" opacity="0.5"/>
+      <circle cx="32" cy="32" r="17" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.3"/>
+      <circle cx="32" cy="32" r="8" fill="none" stroke="#00ff88" stroke-width="0.8" opacity="0.2"/>
+      <line x1="6" y1="32" x2="58" y2="32" stroke="#00ff88" stroke-width="0.6" opacity="0.2"/>
+      <line x1="32" y1="6" x2="32" y2="58" stroke="#00ff88" stroke-width="0.6" opacity="0.2"/>
+      <line x1="32" y1="32" x2="50" y2="16" stroke="#00ff88" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="32" cy="32" r="3" fill="#00ff88"/>
+      <circle cx="50" cy="16" r="3.5" fill="#00ff88"/>
+      <circle cx="50" cy="16" r="7" fill="none" stroke="#00ff88" stroke-width="1.5" opacity="0.5">
+        <animate attributeName="r" values="3.5;9;3.5" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.8;0;0.8" dur="2s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+    <span class="logo-text">PUMP RADAR</span>
+  </div>
+  <div class="header-right">
+    <div style="display:flex;align-items:center;gap:0.5rem;">
+      <div class="live-dot" id="liveDot"></div>
+      <div class="live-txt" id="liveTxt">LIVE</div>
+    </div>
+    <button class="check-btn" id="checkBtnH" onclick="scan()">⚡ CHECK NOW</button>
+  </div>
+</header>
+
+<main>
+  <div class="stats">
+    <div class="stat"><span class="stat-l">Checked</span><span class="stat-v" id="sChecked">0</span></div>
+    <div class="stat"><span class="stat-l">Found</span><span class="stat-v" id="sFound">0</span></div>
+    <div class="stat"><span class="stat-l">🔥🔥🔥🔥🔥</span><span class="stat-v" id="sFive">0</span></div>
+    <div class="stat"><span class="stat-l">Last check</span><span class="stat-v" id="sLast">—</span></div>
+  </div>
+
+  <div class="filters">
+    <button class="fb active" onclick="filter('all',this)">ALL</button>
+    <button class="fb" onclick="filter('5',this)">🔥🔥🔥🔥🔥 5/5</button>
+    <button class="fb" onclick="filter('4',this)">🔥🔥🔥🔥 4/5</button>
+    <button class="fb" onclick="filter('3',this)">🔥🔥🔥 3/5</button>
+    <button class="fb" onclick="filter('2',this)">🔥🔥 2/5</button>
+    <button class="fb" onclick="filter('1',this)">🔥 1/5</button>
+  </div>
+
+  <div class="scanning" id="scanning">
+    <div class="spin"></div>
+    <span>Scanning news and rating meme potential...</span>
+  </div>
+  <div class="err" id="err"></div>
+
+  <div class="grid" id="grid">
+    <div class="empty">
+      <div class="empty-ico">📡</div>
+      <div class="empty-title">Radar Ready</div>
+      <div class="empty-sub">Press CHECK NOW to scan</div>
+    </div>
+  </div>
+
+  <div class="btns">
+    <button class="btn btn-scan" id="checkBtn" onclick="scan()">⚡ CHECK NEWS NOW</button>
+    <button class="btn btn-clear" onclick="clearAll()">🗑 CLEAR ALL NEWS</button>
+  </div>
+</main>
+
+<script>
+let news = [];
+let checked = 0, found = 0, fives = 0;
+let currentFilter = 'all';
+let scanning = false;
+let lastCheck = 0;
+
+function timeAgo(d) {
+  if (!d) return '';
+  const diff = Date.now() - new Date(d).getTime();
+  const m = Math.floor(diff/60000);
+  if (m < 1) return 'Just now';
+  if (m < 60) return m+'m ago';
+  const h = Math.floor(m/60);
+  if (h < 24) return h+'h ago';
+  return Math.floor(h/24)+'d ago';
+}
+
+async function scan() {
+  if (scanning) return;
+  scanning = true;
+
+  const btn = document.getElementById('checkBtn');
+  const btnH = document.getElementById('checkBtnH');
+  btn.disabled = true; btn.textContent = '⏳ Scanning...';
+  if (btnH) { btnH.disabled = true; btnH.textContent = '⏳'; }
+  document.getElementById('scanning').classList.add('show');
+  document.getElementById('err').classList.remove('show');
+  document.getElementById('liveTxt').textContent = 'SCANNING';
+  document.getElementById('liveDot').style.background = '#ffe66d';
+  document.getElementById('liveDot').style.boxShadow = '0 0 8px #ffe66d';
+
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  try {
+    const res = await fetch('/api/news');
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'API error');
+
+    checked++;
+    document.getElementById('sChecked').textContent = checked;
+    document.getElementById('sLast').textContent = timeStr;
+
+    if (data.articles && data.articles.length > 0) {
+      const existingUrls = new Set(news.map(n => n.url));
+      const fresh = data.articles.filter(n => !existingUrls.has(n.url));
+      fresh.forEach(n => {
+        n.checkedAt = timeStr;
+        found++;
+        if (n.rating === 5) fives++;
+      });
+      if (fresh.length > 0) news = [...fresh, ...news].slice(0, 500);
+      document.getElementById('sFound').textContent = found;
+      document.getElementById('sFive').textContent = fives;
+    }
+
+    render();
+    save(timeStr);
+  } catch(e) {
+    const el = document.getElementById('err');
+    el.textContent = '⚠️ ' + e.message;
+    el.classList.add('show');
+  }
+
+  scanning = false;
+  document.getElementById('scanning').classList.remove('show');
+  document.getElementById('liveTxt').textContent = 'LIVE';
+  document.getElementById('liveDot').style.background = 'var(--green)';
+  document.getElementById('liveDot').style.boxShadow = '0 0 8px var(--green)';
+  btn.disabled = false; btn.textContent = '⚡ CHECK NEWS NOW';
+  if (btnH) { btnH.disabled = false; btnH.textContent = '⚡ CHECK NOW'; }
+  lastCheck = Date.now();
+  localStorage.setItem('pr_last', lastCheck);
+}
+
+function render() {
+  const grid = document.getElementById('grid');
+  const filtered = currentFilter === 'all' ? news : news.filter(n => String(n.rating) === currentFilter);
+  const sorted = [...filtered].sort((a,b) => b.rating - a.rating);
+
+  if (sorted.length === 0) {
+    grid.innerHTML = `<div class="empty"><div class="empty-ico">${currentFilter==='all'?'📡':'🔍'}</div><div class="empty-title">${currentFilter==='all'?'No news yet':'None found'}</div><div class="empty-sub">${currentFilter==='all'?'Press CHECK NOW to scan':'Try another filter'}</div></div>`;
+    return;
+  }
+
+  const stars = r => '🔥'.repeat(r);
+  const win = w => {
+    if (w==='now') return '<span class="win win-now">⚡ LAUNCH NOW</span>';
+    if (w==='good') return '<span class="win win-good">⏰ WITHIN 2H</span>';
+    return '<span class="win win-ok">📅 TODAY</span>';
+  };
+
+  grid.innerHTML = sorted.map(n => `
+    <a class="card r${n.rating}" href="${n.url||'#'}" target="_blank" rel="noopener">
+      <div class="card-img">
+        ${n.image ? `<img src="${n.image}" alt="" onerror="this.parentElement.innerHTML='<div class=\\"no-img\\">📰</div>'">` : '<div class="no-img">📰</div>'}
+      </div>
+      <div class="card-body">
+        <div class="card-meta">
+          <span class="badge">${stars(n.rating)} ${n.rating}/5</span>
+          ${n.source?`<span class="src">${n.source}</span>`:''}
+          ${win(n.window)}
+        </div>
+        <div class="card-title">${n.title}</div>
+        ${n.description?`<div class="card-desc">${n.description}</div>`:''}
+        <div class="card-bottom">
+          <div class="coin"><span class="coin-l">Coin</span><span class="coin-v">${n.coin||'$COIN'}</span></div>
+          <span class="time">${timeAgo(n.publishedAt)}</span>
+          <span class="read">Read →</span>
+        </div>
+        ${n.reason&&n.reason!=='Auto-rated'?`<div class="reason">💡 ${n.reason}</div>`:''}
+      </div>
+    </a>`).join('');
+}
+
+function filter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.fb').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function clearAll() {
+  if (!confirm('Clear all news?')) return;
+  news = []; checked = 0; found = 0; fives = 0;
+  ['sChecked','sFound','sFive'].forEach(id => document.getElementById(id).textContent = '0');
+  document.getElementById('sLast').textContent = '—';
+  localStorage.clear();
+  render();
+}
+
+function save(t) {
+  localStorage.setItem('pr_news', JSON.stringify(news));
+  localStorage.setItem('pr_stats', JSON.stringify({checked, found, fives, last: t}));
+}
+
+window.addEventListener('load', () => {
+  try {
+    const n = localStorage.getItem('pr_news');
+    if (n) { news = JSON.parse(n); render(); }
+    const s = localStorage.getItem('pr_stats');
+    if (s) {
+      const p = JSON.parse(s);
+      checked=p.checked||0; found=p.found||0; fives=p.fives||0;
+      document.getElementById('sChecked').textContent = checked;
+      document.getElementById('sFound').textContent = found;
+      document.getElementById('sFive').textContent = fives;
+      if (p.last) document.getElementById('sLast').textContent = p.last;
+    }
+  } catch(e){}
+});
+</script>
+</body>
+</html>
