@@ -385,8 +385,8 @@ main{
 .img-rating{
   position:absolute;bottom:0;left:0;right:0;
   background:linear-gradient(transparent,rgba(2,0,10,0.9));
-  padding:1.5rem 1rem 0.6rem;
-  display:flex;align-items:center;justify-content:space-between;
+  padding:1.5rem 0.75rem 0.6rem;
+  display:flex;align-items:center;justify-content:flex-end;
 }
 
 /* BODY */
@@ -811,12 +811,12 @@ function render() {
           ? `<img src="${n.image}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\"no-img\\">[NO IMG]</div>'">`
           : '<div class="no-img">[NO IMG]</div>'}
         <div class="img-rating">
-          <span class="badge">${stars(n.rating)} ${n.rating}/5</span>
           ${win(n.window)}
         </div>
       </div>
       <div class="card-body">
         <div class="card-meta">
+          <span class="badge">${stars(n.rating)} ${n.rating}/5</span>
           ${n.source?`<span class="src">${n.source}</span>`:''}
           <span class="time">${timeAgo(n.publishedAt)}</span>
         </div>
